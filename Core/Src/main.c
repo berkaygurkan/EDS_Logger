@@ -86,6 +86,13 @@ volatile uint8_t active_buffer = 0;
 volatile uint32_t usb_buffer[2][ADC_BUFFER_SIZE+2][USB_BUFFER_SIZE];
 uint8_t buffer_ready_flag = 3;
 uint32_t packet_counter = 0; // Add packet counter
+extern uint32_t usb_buffer_cnt;
+// USB Program Run Variables
+uint8_t data_acquisition_running = 0; // Flag to control data acquisition
+uint8_t usb_command_buffer[1]; // Buffer to receive USB commands
+extern USBD_HandleTypeDef hUsbDeviceFS; // Assuming this is declared in usb_device.c
+
+
 
 /* USER CODE END PV */
 
@@ -107,6 +114,42 @@ static void MX_TIM3_Init(void);
 void send_data_over_usb(const char* data, uint16_t len) {
 	CDC_Transmit_FS((uint8_t*)data, len);
 }
+
+// CDC Receive Callback function (must match declaration in usbd_cdc_if.c)
+uint8_t CDC_Receive_FS_App(uint8_t *Buf, uint32_t *Len)
+{
+
+  HAL_GPIO_TogglePin(GPIOB, LD2_Pin); // Example: Toggle an LED
+  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, Buf); // Re-arm the receive buffer
+  // Process received command
+  if (*Len > 0) {
+    if (Buf[0] == 'S') { // Start command
+      if (!data_acquisition_running) {
+        HAL_TIM_Base_Start_IT(&htim3); // Start TIM3 and interrupts
+        HAL_TIM_Base_Start_IT(&htim2); // Start TIM2 and interrupts (if needed for toggling)
+        data_acquisition_running = 1;
+        buffer_ready_flag = 3; // Set to initial not ready value.
+        packet_counter = 0; // Reset packet counter
+        time_ms = 0;      // Reset time counter
+        usb_buffer_cnt = 0;
+        active_buffer = 0;
+      } else {
+      }
+    } else if (Buf[0] == 'T') { // Stop command
+      if (data_acquisition_running) {
+        HAL_TIM_Base_Stop_IT(&htim3); // Stop TIM3 and interrupts
+        HAL_TIM_Base_Stop_IT(&htim2); // Stop TIM2 and interrupts
+        data_acquisition_running = 0;
+        buffer_ready_flag = 3; // Ensure sending loop stops gracefully
+      } else {
+      }
+    } else {
+    }
+  }
+  return USBD_OK;
+}
+
+
 
 /* USER CODE END 0 */
 
@@ -147,9 +190,9 @@ int main(void)
 	MX_TIM3_Init();
 	MX_USB_DEVICE_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE);
-	HAL_TIM_Base_Start_IT(&htim2);
+	//HAL_TIM_Base_Start_IT(&htim3);
+	//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE);
+	//HAL_TIM_Base_Start_IT(&htim2);
 	//Test Purposes Only
 
 	time_start_ms = time_ms;
@@ -493,7 +536,7 @@ static void MX_TIM3_Init(void)
 	htim3.Instance = TIM3;
 	htim3.Init.Prescaler = 10799;
 	htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim3.Init.Period = 9;//9;
+	htim3.Init.Period = 9;
 	htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 	if (HAL_TIM_Base_Init(&htim3) != HAL_OK)

@@ -304,7 +304,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   if (htim->Instance == TIM2)
   {
-	  HAL_GPIO_TogglePin(GPIOB,LD1_Pin);
+	  //HAL_GPIO_TogglePin(GPIOB,LD1_Pin);
   }
 }
 
@@ -312,7 +312,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   // Called when DMA fills the ENTIRE buffer
-	HAL_GPIO_TogglePin(GPIOB,LD2_Pin);
+	//HAL_GPIO_TogglePin(GPIOB,LD2_Pin);
 
 	  // Fill the buffer
 
