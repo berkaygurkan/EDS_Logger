@@ -1,0 +1,56 @@
+# STM32CubeIDE/STM32CubeMX files
+/.settings/
+/*.launch
+/.project
+/.cproject
+/.mxproject
+/.idea/
+/*.map
+/*.elf
+/*.bin
+/*.d
+/*.lst
+/Debug/
+/Release/
+/*.axf
+/*.o
+/*.a
+/*.dep
+
+# Build output directories
+/Debug/
+/Release/
+
+# System files
+Thumbs.db
+.DS_Store
+
+# User specific IDE files
+*.user
+*.suo
+*.swp
+
+# MATLAB user-specific files
+*.asv
+*.mex*
+*.mode
+*.slxc
+*.slx
+*.mdl
+*.mat
+*.fig
+*.m~  # MATLAB backup files
+*.mex* # MATLAB compiled files
+*.p
+*.mlapp
+
+# Cache files
+*.mex*
+*.pdb
+*.xlxs
+
+# MATLAB session and preferences
+MATLAB_*
+*.session
+*.pref
+
