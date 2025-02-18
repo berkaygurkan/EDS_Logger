@@ -113,6 +113,10 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define ADC_BUFFER_SIZE 5
 #define USB_BUFFER_SIZE 8000
+
+#define BUFFER_STATE_READY_0    0  // Buffer 0 is ready for transmission
+#define BUFFER_STATE_READY_1    1  // Buffer 1 is ready for transmission
+#define BUFFER_STATE_BUSY       3  // No buffer ready, processing in progress
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

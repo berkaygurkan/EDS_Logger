@@ -31,15 +31,15 @@
 
 % --- START OF MATLAB CODE ---
 
-load sensor_data.mat
+
 
 
 % 1. Load or Generate Data (Replace with your actual data loading)
 % Example: Generate a sample signal with some noise
 fs = 1000; % Sampling frequency (Hz)
-t = 0:1/fs:1; % 1 second time vector
+%t = 0:1/fs:1; % 1 second time vector
 
-data = dataBuffer(50:end,3);
+
 
 % **Important: Replace the lines above with how you load your actual data into the 'data' variable.**
 % For example, if your data is in a file 'data.txt':
@@ -47,7 +47,7 @@ data = dataBuffer(50:end,3);
 
 
 % 2. Define Sampling Frequency (fs) - Already defined above as 1000 Hz
-
+data = myDataBuffer;
 % 3. Perform FFT
 N = length(data); % Length of the data
 fft_data = fft(data);

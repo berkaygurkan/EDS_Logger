@@ -1,0 +1,4 @@
+../Core/Src/motor_speed.c:20:19:MotorSpeed_Init	16	static
+../Core/Src/motor_speed.c:37:7:MotorSpeed_GetRPM	4	static
+../Core/Src/motor_speed.c:45:17:MotorSpeed_CalculatePeriod	16	static
+../Core/Src/motor_speed.c:58:6:MotorSpeed_TimerCallback	24	static

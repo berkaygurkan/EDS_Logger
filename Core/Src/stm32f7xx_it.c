@@ -1,27 +1,33 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    stm32f7xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32f7xx_it.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <data_acquisition.h>
 #include "main.h"
 #include "stm32f7xx_it.h"
+#include "math.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bldc_interface_uart.h"
+#include "bldc_interface.h"
+#include "controller.h"
+#include "motor_speed.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,10 +59,6 @@
 /* USER CODE BEGIN 0 */
 // --- Defines ---
 
-extern volatile uint32_t adc_buffer[ADC_BUFFER_SIZE];
-extern volatile uint8_t active_buffer;
-extern volatile uint32_t usb_buffer[2][ADC_BUFFER_SIZE+2][USB_BUFFER_SIZE];
-
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -64,6 +66,10 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 extern DMA_HandleTypeDef hdma_adc1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+extern DMA_HandleTypeDef hdma_usart2_tx;
+extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -80,9 +86,9 @@ void NMI_Handler(void)
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-   while (1)
-  {
-  }
+	while (1)
+	{
+	}
   /* USER CODE END NonMaskableInt_IRQn 1 */
 }
 
@@ -207,6 +213,34 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 stream5 global interrupt.
+  */
+void DMA1_Stream5_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream5_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+  /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 stream6 global interrupt.
+  */
+void DMA1_Stream6_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream6_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream6_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+  /* USER CODE BEGIN DMA1_Stream6_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream6_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM2 global interrupt.
   */
 void TIM2_IRQHandler(void)
@@ -232,6 +266,34 @@ void TIM3_IRQHandler(void)
   /* USER CODE BEGIN TIM3_IRQn 1 */
 
   /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM4 global interrupt.
+  */
+void TIM4_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM4_IRQn 0 */
+
+  /* USER CODE END TIM4_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
+
+  /* USER CODE END TIM4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
 }
 
 /**
@@ -264,60 +326,45 @@ void OTG_FS_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
-/* General Purpose Timer*/
-uint32_t time_ms = 0;
-uint16_t usb_buffer_cnt = 0;
-extern uint8_t buffer_ready_flag;
-extern uint32_t motor_pulse;
-uint32_t overflow_count = 0;
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  if (htim->Instance == TIM3)
-  {
+	if (htim->Instance == TIM3)
+	{
+		DataAcq_ProcessSamples(htim);
+	}
 
-	     time_ms++;
-	     usb_buffer[active_buffer][0][usb_buffer_cnt] = time_ms;
-	 	 usb_buffer[active_buffer][1][usb_buffer_cnt] = adc_buffer[0]; // Panasonic
-	 	 usb_buffer[active_buffer][2][usb_buffer_cnt] = adc_buffer[1]; // Load Cell 1
-	 	 usb_buffer[active_buffer][3][usb_buffer_cnt] = adc_buffer[2]; // Load Cell 2
-	 	 usb_buffer[active_buffer][4][usb_buffer_cnt] = adc_buffer[3]; // Load Cell 3
-	 	 usb_buffer[active_buffer][5][usb_buffer_cnt] = adc_buffer[4]; // Load Cell 4
-	 	 usb_buffer[active_buffer][6][usb_buffer_cnt] = motor_pulse; // PWM Signal
-	 	 usb_buffer_cnt++;
-
-	  if (usb_buffer_cnt>=USB_BUFFER_SIZE)
-	  {
-
-	 	   active_buffer = 1-active_buffer;
-	 	   usb_buffer_cnt = 0;
-	 	   if (active_buffer == 1)
-	 		   buffer_ready_flag = 0;
-	 	   else if (active_buffer == 0)
-	 		   buffer_ready_flag=1;
-	 	   else
-	 		   Error_Handler();
-
-	  }
-
-
-
-  }
-  if (htim->Instance == TIM2)
-  {
-	  //HAL_GPIO_TogglePin(GPIOB,LD1_Pin);
-  }
 }
 
+
 /*ADC Measurement*/
-
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-  // Called when DMA fills the ENTIRE buffer
-	//HAL_GPIO_TogglePin(GPIOB,LD2_Pin);
+	// Called when DMA fills the ENTIRE buffer
+	HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
 
-	  // Fill the buffer
+}
 
 
 
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart -> Instance == USART2)
+	{
+		//
+		//bldc_interface_uart_process_byte(rx_buffer[0]);
 	}
+}
+
+
+
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	MotorSpeed_TimerCallback(htim);
+}
+
+
+
 
 /* USER CODE END 1 */

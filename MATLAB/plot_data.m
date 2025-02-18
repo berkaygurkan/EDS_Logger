@@ -1,18 +1,23 @@
 clear all
 clc
-load("sensor_data.mat")
+load("sensor_data_final.mat")
 
-
-% detectJumps(dataBuffer(:,1),1)
-% 
-% detectJumps(dataBuffer(:,2),1)
-
+cnt = myDataBuffer(:,1);
+time_ms = myDataBuffer(:,2);
+adc_1 = myDataBuffer(:,3);
+motor_rpm = myDataBuffer(:,11)/1000;
+motor_cmd = myDataBuffer(:,10)/1000;
 
 figure(2)
-plot(dataBuffer(:,1))  %% Packet Counter
+plot(time_ms,motor_rpm);
 hold on
-plot(dataBuffer(:,2))  %% Time ms
-plot(dataBuffer(:,3))  %% ADC [0-4095]
+plot(time_ms,motor_cmd/7,"LineWidth",1);
+legend("Actual","Reference")
 
 
-detectJumps(dataBuffer(:,2),1)
+figure(3)
+plot(time_ms,cnt);
+
+
+
+detectJumps(myDataBuffer(:,2),1)

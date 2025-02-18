@@ -6,7 +6,8 @@ function usb_data_gui_final()
     handles = guihandles(fig); % Get handles to GUI objects
     handles.isRunning = false;
     handles.s = [];
-    handles.dataBuffer = zeros(0, 6); % Initialize dataBuffer as 0x6 matrix to enforce column number
+    handles.dataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
+    myDataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
     handles.byteBuffer = uint8([]);
     handles.header = uint8([0xAA, 0xBB, 0xCC, 0xDD]);
     handles.packetSize = 28; % Header + Packet Counter + 5 Data Values (uint32_t)
@@ -115,10 +116,11 @@ function usb_data_gui_final()
                             packet = handles.byteBuffer(headerIdx:headerIdx + handles.packetSize - 1);
                             handles.byteBuffer(1:headerIdx + handles.packetSize - 1) = [];
                             values = typecast(packet(9:end), 'uint32'); % Skip header and packet counter
-                            packet_info = typecast(packet(5:8), 'uint32'); % Get packet counter value
+                            packet_info = typecast(packet(5:end), 'uint32'); % Get packet counter value
                             packet_data = [packet_info(:); values(:)]; % Force both to be column vectors
                             % whos handles.dataBuffer packet_data' % Debug: Check dimensions
-                            handles.dataBuffer = [handles.dataBuffer; packet_data']; % Concatenate vertically
+                            %handles.dataBuffer = [handles.dataBuffer; packet_data']; % Concatenate vertically
+                            myDataBuffer = [myDataBuffer;packet_data'];
                             packet_count = packet_count + 1;
                         else
                             break; % Incomplete packet
@@ -152,7 +154,7 @@ function usb_data_gui_final()
         if ~handles.isRunning && ~isempty(handles.s) && isvalid(handles.s) % Check if serial port is valid before clearing/closing
             clear handles.s;
         end
-        save('sensor_data_final.mat', 'handles', 'packet_count', 'missed_header_count');
+        save('sensor_data_final.mat','handles','packet_count', 'missed_header_count','packet_data',"myDataBuffer");
         disp(['Complete. Processed Packets: ', num2str(packet_count), ', Missed Headers: ', num2str(missed_header_count)]);
         set(handles.statusText, 'String', 'Data saved to sensor_data_final.mat.');
         guidata(gcbo, handles); % Update handles one last time before exit
