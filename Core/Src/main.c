@@ -670,7 +670,7 @@ static HAL_StatusTypeDef ApplicationInit_Sequence(void)
     /* Start ADC with DMA */
     if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE) != HAL_OK) {
         return HAL_ERROR;
-    }
+       }
 
     /* Initialize motor speed monitoring */
     if (MotorSpeed_Init(&htim4) != HAL_OK) {

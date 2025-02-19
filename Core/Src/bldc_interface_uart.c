@@ -106,7 +106,9 @@ void send_packet(unsigned char *data, unsigned int len)
 	static uint8_t buffer[PACKET_MAX_PL_LEN + 5];
 	memcpy(buffer, data, len);
 
+	HAL_GPIO_WritePin(GPIOB, LD3_Pin,GPIO_PIN_SET);
 	// Send the data over UART
 	HAL_UART_Transmit_DMA(&huart2, buffer, len);
+
 }
 

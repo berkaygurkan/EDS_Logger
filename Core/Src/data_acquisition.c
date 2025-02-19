@@ -65,7 +65,8 @@ void DataAcq_ProcessSamples(TIM_HandleTypeDef* htim)
     }
 
     // Toggle LED to indicate sampling
-    HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+    //HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+
 
     // Get motor data
     float set_rpm = Motor_Input();

@@ -72,7 +72,7 @@ void usb_transmit_task() {
 uint8_t CDC_Receive_FS_App(uint8_t *Buf, uint32_t *Len)
 {
 
-  HAL_GPIO_TogglePin(GPIOB, LD2_Pin); // Example: Toggle an LED
+  //HAL_GPIO_TogglePin(GPIOB, LD2_Pin); // Example: Toggle an LED
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, Buf); // Re-arm the receive buffer
   // Process received command
   if (*Len > 0) {

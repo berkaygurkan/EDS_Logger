@@ -331,7 +331,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM3)
 	{
+		//HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 		DataAcq_ProcessSamples(htim);
+		//HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+	}
+
+	if (htim->Instance == TIM2)
+	{
+		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+		HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
 	}
 
 }
@@ -340,21 +348,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*ADC Measurement*/
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	// Called when DMA fills the ENTIRE buffer
+	//HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
 	HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
-
 }
 
 
-
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if (huart -> Instance == USART2)
-	{
-		//
-		//bldc_interface_uart_process_byte(rx_buffer[0]);
-	}
-}
 
 
 

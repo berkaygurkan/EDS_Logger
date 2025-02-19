@@ -87,5 +87,7 @@ float Motor_Input(void)
 	sine2 = sinf(2*M_PI*f_sine*time);
 	set_rpm = sine_bias+ sine_amplitude*sine1 + sine_amplitude/2*sine2;
 
+	set_rpm = 1500.0f;
+
 	return set_rpm;
 }
