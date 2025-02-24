@@ -38,7 +38,7 @@ Core/Src/data_acquisition.o: ../Core/Src/data_acquisition.c \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd_ex.h \
  ../Core/Inc/main.h ../Core/Inc/motor_speed.h \
  ../Core/Inc/bldc_interface.h ../Core/Inc/datatypes.h \
- ../Core/Inc/controller.h
+ ../Core/Inc/controller.h ../Core/Inc/usb_comm.h
 ../Core/Inc/data_acquisition.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -81,3 +81,4 @@ Core/Src/data_acquisition.o: ../Core/Src/data_acquisition.c \
 ../Core/Inc/bldc_interface.h:
 ../Core/Inc/datatypes.h:
 ../Core/Inc/controller.h:
+../Core/Inc/usb_comm.h:

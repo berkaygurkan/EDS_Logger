@@ -1,55 +1,57 @@
 function usb_data_gui_live()
-    % Create and run the USB Data Acquisition GUI with live visualization
-    % --- GUI Creation ---
-    fig = create_gui();
-    
-    % --- GUI Components ---
-    handles = guihandles(fig); % Get handles to GUI objects
-    handles.isRunning = false;
-    handles.s = [];
-    handles.dataBuffer = zeros(0, 7); % Initialize dataBuffer
-    handles.byteBuffer = uint8([]);
-    handles.header = uint8([0xAA, 0xBB, 0xCC, 0xDD]);
-    handles.packetSize = 28; % Header + Packet Counter + 5 Data Values (uint32_t)
-    handles.fig = fig; % Store the figure handle for access in all subfunctions
-    
-    % --- Live Visualization Setup ---
-    handles.dataPlot = subplot(2,1,1, 'Parent', fig);
-    title(handles.dataPlot, 'Live Data');
-    xlabel(handles.dataPlot, 'Time (ms)');
-    ylabel(handles.dataPlot, 'Values');
-    hold(handles.dataPlot, 'on');
-    grid(handles.dataPlot, 'on');
-    
-    % Create data lines for different signals
-    handles.dataLines = [];
-    % Create 5 lines with different colors
-    colors = {'b', 'r', 'g', 'm', 'c'};
-    labels = {'Time', 'Panasonic', 'Load Cell', 'Set RPM', 'Current Speed'};
-    for i = 1:5
-        handles.dataLines(i) = plot(handles.dataPlot, 0, 0, colors{i}, 'LineWidth', 1.5);
-    end
-    legend(handles.dataPlot, labels);
-    
-    % Plot for displaying buffer fill status
-    handles.bufferPlot = subplot(2,1,2, 'Parent', fig);
-    handles.bufferBar = bar(handles.bufferPlot, 0, 'FaceColor', [0.2 0.6 0.8]);
-    title(handles.bufferPlot, 'Buffer Fill Status');
-    xlabel(handles.bufferPlot, 'Buffer');
-    ylabel(handles.bufferPlot, 'Fill Percentage (%)');
-    ylim(handles.bufferPlot, [0 100]);
-    
-    % Visualization parameters
-    handles.plotWindowSize = 1000; % Show last 1000 samples
-    handles.updateInterval = 0.05; % Update plot every 50ms (increased from 100ms)
-    handles.lastUpdateTime = 0;
-    
-    % Force initial rendering to ensure plots are properly created
-    drawnow;
-    
-    guidata(fig, handles); % Store handles in figure's user data
-    
-    % --- Helper Functions ---
+% Create and run the USB Data Acquisition GUI with live visualization
+% --- GUI Creation ---
+fig = create_gui();
+
+% --- GUI Components ---
+handles = guihandles(fig); % Get handles to GUI objects
+handles.isRunning = false;
+handles.s = [];
+handles.dataBuffer = zeros(0, 6); % Initialize dataBuffer
+handles.byteBuffer = uint8([]);
+handles.header = uint8([0xAA, 0xBB, 0xCC, 0xDD]);
+handles.packetSize = 28; % Header + Packet Counter + 5 Data Values (uint32_t)
+handles.fig = fig; % Store the figure handle for access in all subfunctions
+
+
+
+% --- Live Visualization Setup ---
+handles.dataPlot = subplot(2,1,1, 'Parent', fig);
+title(handles.dataPlot, 'Live Data');
+xlabel(handles.dataPlot, 'Time (ms)');
+ylabel(handles.dataPlot, 'Values');
+hold(handles.dataPlot, 'on');
+grid(handles.dataPlot, 'on');
+
+% Create data lines for different signals
+handles.dataLines = [];
+% Create 5 lines with different colors
+colors = {'b', 'r', 'g', 'm', 'c'};
+labels = {'Time', 'Panasonic', 'Load Cell', 'Set RPM', 'Current Speed'};
+for i = 1:4
+    handles.dataLines(i) = plot(handles.dataPlot, 0, 0, colors{i}, 'LineWidth', 1.5);
+end
+legend(handles.dataPlot, labels);
+
+% Plot for displaying buffer fill status
+handles.bufferPlot = subplot(2,1,2, 'Parent', fig);
+handles.bufferBar = bar(handles.bufferPlot, 0, 'FaceColor', [0.2 0.6 0.8]);
+title(handles.bufferPlot, 'Buffer Fill Status');
+xlabel(handles.bufferPlot, 'Buffer');
+ylabel(handles.bufferPlot, 'Fill Percentage (%)');
+ylim(handles.bufferPlot, [0 100]);
+
+% Visualization parameters
+handles.plotWindowSize = 1000; % Show last 1000 samples
+handles.updateInterval = 0.05; % Update plot every 50ms (increased from 100ms)
+handles.lastUpdateTime = 0;
+
+% Force initial rendering to ensure plots are properly created
+drawnow;
+
+guidata(fig, handles); % Store handles in figure's user data
+
+% --- Helper Functions ---
     function fig = create_gui()
         % Create the main figure and UI controls
         fig = figure('Name', 'USB Data Acquisition with Live Visualization', ...
@@ -59,35 +61,35 @@ function usb_data_gui_live()
             'CloseRequestFcn', @closeGUI, ...
             'Visible', 'on', ... % Ensure figure is visible
             'Renderer', 'painters'); % Use painters renderer for better performance
-        
+
         % Control Panel
         uipanel('Position', [0.01 0.01 0.98 0.15], 'Title', 'Controls');
-        
+
         % Start Button
         uicontrol('Style', 'pushbutton', ...
             'String', 'Start', ...
             'Position', [20 30 100 30], ...
             'Callback', @startCallback);
-        
+
         % Stop Button
         uicontrol('Style', 'pushbutton', ...
             'String', 'Stop', ...
             'Position', [140 30 100 30], ...
             'Callback', @stopCallback);
-        
+
         % Save Button
         uicontrol('Style', 'pushbutton', ...
             'String', 'Save Data', ...
             'Position', [260 30 100 30], ...
             'Callback', @saveDataCallback);
-        
+
         % Status Text Box
         uicontrol('Style', 'text', ...
             'Tag', 'statusText',...
             'String', 'Idle', ...
             'Position', [380 30 300 30], ...
             'FontSize', 12);
-            
+
         % Display packet count
         uicontrol('Style', 'text', ...
             'Tag', 'packetCounter',...
@@ -103,7 +105,7 @@ function usb_data_gui_live()
             set(handles.statusText, 'String', 'Already running.');
             return;
         end
-        
+
         port = 'COM5'; % Replace with your COM port
         try
             handles.s = serialport(port, 115200);
@@ -113,16 +115,16 @@ function usb_data_gui_live()
             set(handles.statusText, 'String', ['Error opening port: ', e.message]);
             return;
         end
-        
+
         handles.dataBuffer = zeros(0, 7); % Re-initialize dataBuffer at start
         handles.byteBuffer = uint8([]);
         handles.isRunning = true;
         set(handles.statusText, 'String', 'Running... Press "P" to stop.');
         guidata(fig, handles); % Update handles using fig
-        
+
         % Ensure figure is visible and brought to the front
         figure(fig);
-        
+
         data_acquisition_loop(); % Start data acquisition loop
     end
 
@@ -148,7 +150,7 @@ function usb_data_gui_live()
             end
         end
     end
-    
+
     function saveDataCallback(~, ~)
         % Callback for the Save Data button
         handles = guidata(fig); % Use the specific figure handle
@@ -187,126 +189,79 @@ function usb_data_gui_live()
             disp('Warning: Figure handle is invalid, cannot delete.');
         end
     end
-    
-   function updatePlots()
-    % Update the live visualization plots
-    handles = guidata(fig); % Use the specific figure handle
-    currentTime = toc;
-    
-    % Only update every updateInterval seconds
-    if currentTime - handles.lastUpdateTime < handles.updateInterval
-        return;
-    end
-    
-    handles.lastUpdateTime = currentTime;
-    
-    % If we have enough data, update the plots
-    if size(handles.dataBuffer, 1) > 10
-        % Determine the window of data to show (most recent samples)
-        dataSize = size(handles.dataBuffer, 1);
-        startIdx = max(1, dataSize - handles.plotWindowSize);
-        plotData = handles.dataBuffer(startIdx:end, :);
-        
-        % IMPORTANT FIX: Ensure time data is properly extracted
-        % In your data structure, column 3 contains time values
-        time_data = plotData(:, 3);
-        
-        % Debug information - print the first few time values to console
-        if ~isempty(time_data) && dataSize % 100 == 0
-            disp(['Time data range: ', num2str(min(time_data)), ' to ', num2str(max(time_data))]);
-            disp(['First few time values: ', num2str(time_data(1:min(5,length(time_data))))']);
+
+    function updatePlots(handles)
+        % Update the live visualization plots
+        %%handles = guidata(fig); % Use the specific figure handle
+        currentTime = toc;
+
+        % Only update every updateInterval seconds
+        if currentTime - handles.lastUpdateTime < handles.updateInterval
+            return;
         end
-        
-        % Check if time data looks valid (non-zero, increasing)
-        if all(time_data == 0) || (length(time_data) > 1 && all(diff(time_data) == 0))
-            % Time data appears invalid, use packet indices instead
-            time_data = (1:size(plotData, 1))' + startIdx - 1;
-            disp('Warning: Using packet indices instead of time values');
-        end
-        
-        % Update each data line with proper time values
-        for i = 1:5
-            if isvalid(handles.dataLines(i))
-                y_data = plotData(:, i+2);
-                
-                % Check if Y data is valid (not all zeros/same value)
-                if all(y_data == 0) || (length(y_data) > 1 && all(diff(y_data) == 0))
-                    % If Y data is invalid, use a simple sine wave for visualization testing
-                    if i == 1
-                        y_data = sin(time_data/1000) * 100 + 500;
-                    else
-                        y_data = sin(time_data/1000 + i*pi/4) * 100 * i + 500 * i;
-                    end
-                    disp(['Warning: Using test data for line ', num2str(i)]);
-                end
-                
-                set(handles.dataLines(i), 'XData', time_data, 'YData', y_data);
+
+        handles.lastUpdateTime = currentTime;
+
+        % If we have enough data, update the plots
+        if size(handles.dataBuffer, 1) > 10
+            % Determine the window of data to show (most recent samples)
+            dataSize = size(handles.dataBuffer, 1);
+            startIdx = max(1, dataSize - handles.plotWindowSize);
+            plotData = handles.dataBuffer(startIdx:end, :);
+
+            % Time data is in column 3 (after packet_info)
+            time_data = plotData(:, 3);
+            plotData(:,5) = plotData(:,5) / (1000*7);
+            plotData(:,6) = plotData(:,6) / (1000);
+            % Update each data line
+            for i = 1:4
+                %if isvalid(handles.dataLines(i))
+                    set(handles.dataLines(i), 'XData', time_data, 'YData', plotData(:, i+2));
+                %end
             end
-        end
-        
-        % Update axis limits to show all the data with some padding
-        if ~isempty(time_data)
-            % Set X limits with 5% padding
-            x_range = max(time_data) - min(time_data);
-            if x_range > 0
-                x_padding = x_range * 0.05;
-                xlim(handles.dataPlot, [min(time_data)-x_padding, max(time_data)+x_padding]);
+
+            % Update axis limits to show all the data
+            if ~isempty(time_data)
+                xlim(handles.dataPlot, [min(time_data), max(time_data)]);
+
+                % Auto-adjust Y axis
+                all_y_data = plotData(:, 3:5);
+                ylim(handles.dataPlot, [min(all_y_data(:)), max(all_y_data(:))]);
             end
-            
-            % Get Y values from all data series for auto-scaling
-            y_data_all = [];
-            for i = 1:5
-                if isvalid(handles.dataLines(i))
-                    y_data_all = [y_data_all; get(handles.dataLines(i), 'YData')];
-                end
-            end
-            
-            % Set Y limits with 10% padding
-            if ~isempty(y_data_all)
-                y_min = min(y_data_all(:));
-                y_max = max(y_data_all(:));
-                y_range = y_max - y_min;
-                if y_range > 0
-                    y_padding = y_range * 0.1;
-                    ylim(handles.dataPlot, [y_min-y_padding, y_max+y_padding]);
-                end
-            end
-            
+
             % Update packet counter display
             packetCount = plotData(end, 2);
             set(handles.packetCounter, 'String', ['Packets: ', num2str(packetCount)]);
-            
+
             % Update buffer fill bar
             bufferFillPercent = mod(dataSize, 8000) / 8000 * 100;
             set(handles.bufferBar, 'YData', bufferFillPercent);
-            
-            % Ensure grid is visible for better readability
-            grid(handles.dataPlot, 'on');
-            
+
             % Force immediate redraw with no rate limiting
             drawnow;
+            figure(fig); % Ensure figure is active and visible
         end
+
+        % Store updated handles
+        guidata(fig, handles);
     end
-    
-    % Store updated handles
-    guidata(fig, handles);
-end
+
     function data_acquisition_loop()
         % Main data acquisition loop with live visualization
         handles = guidata(fig); % Use the specific figure handle
         packet_count = 0;
         missed_header_count = 0;
-        
+
         % Create a visual indicator to confirm the loop is running
         indicator = text(handles.dataPlot, 0.95, 0.95, '●', ...
             'Units', 'normalized', 'Color', 'r', 'FontSize', 16, ...
             'HorizontalAlignment', 'center');
         indicator_state = false;
-        
+
         % Start timer for plot updates
         tic;
         handles.lastUpdateTime = 0;
-        
+
         while handles.isRunning
             try
                 % Toggle indicator to show loop is active
@@ -316,12 +271,12 @@ end
                 else
                     set(indicator, 'Color', 'r');
                 end
-                
+
                 if ~isempty(handles.s) && isvalid(handles.s) && handles.s.NumBytesAvailable > 0
                     newBytes = read(handles.s, handles.s.NumBytesAvailable, 'uint8');
                     handles.byteBuffer = [handles.byteBuffer; newBytes(:)];
                 end
-                
+
                 % Process all complete packets in the buffer
                 while numel(handles.byteBuffer) >= handles.packetSize
                     % Use the exact findHeader function from the working usb_data_gui
@@ -330,25 +285,25 @@ end
                         if (numel(handles.byteBuffer) >= headerIdx + handles.packetSize - 1)
                             packet = handles.byteBuffer(headerIdx:headerIdx + handles.packetSize - 1);
                             handles.byteBuffer(1:headerIdx + handles.packetSize - 1) = [];
-                            
+
                             % Extract data as done in the working usb_data_gui
                             % Get the packet counter (first uint32 after header)
                             packet_info = typecast(packet(5:8), 'uint32');
-                            
+
                             % Get the data values (remaining uint32 values)
                             values = typecast(packet(9:end), 'uint32');
-                            
+
                             % Combine as column vectors and transpose for row addition
                             packet_data = [packet_info(:); values(:)];
-                            
+
                             % Add to data buffer
                             handles.dataBuffer = [handles.dataBuffer; packet_data'];
                             packet_count = packet_count + 1;
-                            
+
                             % Print debug info for the first few packets
                             if packet_count <= 3
                                 disp(['Packet ', num2str(packet_count), ' found at index ', ...
-                                     num2str(headerIdx), ', data: ', num2str(packet_data')]);
+                                    num2str(headerIdx), ', data: ', num2str(packet_data')]);
                             end
                         else
                             break; % Incomplete packet
@@ -361,11 +316,11 @@ end
                         else
                             break; % Buffer too small
                         end
-                        
+
                         % Prevent infinite loop with excessive missed headers
                         if missed_header_count > 1000
                             fprintf('Warning: Too many missed headers (%d). Initial buffer: %s\n', ...
-                                   missed_header_count, mat2str(handles.byteBuffer(1:min(20,end))));
+                                missed_header_count, mat2str(handles.byteBuffer(1:min(20,end))));
                             handles.isRunning = false;
                             set(handles.statusText, 'String', 'Too many header losses - stopped.');
                             guidata(fig, handles);
@@ -373,24 +328,24 @@ end
                         end
                     end
                 end
-                
+
                 % Always update plots regardless of whether new data arrived
-                updatePlots();
-                
+                updatePlots(handles);
+
                 % Store updated handles
                 guidata(fig, handles);
-                
+
                 % Small delay to prevent CPU hogging but allow UI responsiveness
-                pause(0.005); 
-                
+                pause(0.005);
+
                 % Get updated handles for the next loop iteration
                 handles = guidata(fig);
-                
+
                 % Check if we should still be running
                 if ~handles.isRunning
                     break;
                 end
-                
+
             catch serial_error
                 fprintf('Serial port error: %s\n', serial_error.message);
                 if isvalid(handles.statusText)
@@ -401,23 +356,23 @@ end
                 break;
             end
         end
-        
+
         % Loop finished (isRunning is false) - Cleanup
         if ~isempty(handles.s) && isvalid(handles.s)
             clear handles.s;
             handles.s = [];
         end
-        
+
         % Remove indicator
         if isvalid(indicator)
             delete(indicator);
         end
-        
+
         disp(['Complete. Processed Packets: ', num2str(packet_count), ...
-              ', Missed Headers: ', num2str(missed_header_count)]);
+            ', Missed Headers: ', num2str(missed_header_count)]);
         if isvalid(handles.statusText)
             set(handles.statusText, 'String', ['Data acquisition complete. ', ...
-                                  num2str(packet_count), ' packets processed.']);
+                num2str(packet_count), ' packets processed.']);
         end
         guidata(fig, handles);
     end
@@ -428,11 +383,11 @@ end
         headerLen = numel(header);
         bufferLen = numel(buffer);
         headerIdx = [];
-        
+
         if bufferLen < headerLen
             return;
         end
-        
+
         for idx = 1:bufferLen - headerLen + 1
             current_segment = buffer(idx:idx+headerLen-1);
             isHeader = true;

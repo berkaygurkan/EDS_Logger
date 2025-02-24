@@ -43,7 +43,8 @@ Core/Src/usb_comm.o: ../Core/Src/usb_comm.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
- ../Core/Inc/data_acquisition.h ../Core/Inc/motor_speed.h
+ ../Core/Inc/data_acquisition.h ../Core/Inc/motor_speed.h \
+ ../Core/Inc/usb_comm.h
 ../USB_DEVICE/App/usbd_cdc_if.h:
 ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h:
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
@@ -91,3 +92,4 @@ Core/Src/usb_comm.o: ../Core/Src/usb_comm.c \
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h:
 ../Core/Inc/data_acquisition.h:
 ../Core/Inc/motor_speed.h:
+../Core/Inc/usb_comm.h:

@@ -1,4 +1,5 @@
-../Core/Src/usb_comm.c:26:16:transmit_usb_packet	32	static
-../Core/Src/usb_comm.c:44:13:process_and_transmit_buffer	56	static
-../Core/Src/usb_comm.c:62:6:usb_transmit_task	8	static
-../Core/Src/usb_comm.c:72:9:CDC_Receive_FS_App	16	static
+../Core/Src/usb_comm.c:33:9:transmit_usb_packet	32	static
+../Core/Src/usb_comm.c:77:9:CDC_Receive_FS_App	16	static
+../Core/Src/usb_comm.c:113:6:check_and_send_chunks	16	static
+../Core/Src/usb_comm.c:141:6:process_and_transmit_chunk	72	static
+../Core/Src/usb_comm.c:171:6:usb_transmit_task	8	static

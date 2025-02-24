@@ -8,10 +8,11 @@
 #include "motor_speed.h"
 #include "bldc_interface.h"
 #include "controller.h"
+#include "usb_comm.h"
 
 
 /* Private variables */
-static volatile uint32_t usb_buffer_cnt = 0;                   // Current buffer position
+volatile uint32_t usb_buffer_cnt = 0;                   // Current buffer position
 static volatile uint8_t active_buffer = 0;                     // Currently active buffer
 volatile uint8_t buffer_ready_flag = 0;               // Buffer ready for transmission
 static volatile uint32_t time_ms = 0;                         // Time counter
@@ -20,7 +21,7 @@ extern volatile uint32_t usb_buffer[2][ADC_BUFFER_SIZE+2][USB_BUFFER_SIZE];
 /* Private function prototypes */
 static void DataAcq_SwitchBuffers(void);
 static uint32_t DataAcq_ScaleFloatValue(float value);
-
+extern volatile uint32_t last_chunk_sent;
 /**
  * @brief Initialize the data acquisition module
  */
@@ -29,7 +30,7 @@ HAL_StatusTypeDef DataAcq_Init(void)
     // Initialize counters and flags
     usb_buffer_cnt = 0;
     active_buffer = 0;
-    buffer_ready_flag = 3;
+    buffer_ready_flag = BUFFER_STATE_BUSY;
     time_ms = 0;
 
     return HAL_OK;
@@ -48,11 +49,16 @@ static uint32_t DataAcq_ScaleFloatValue(float value)
  */
 static void DataAcq_SwitchBuffers(void)
 {
+
+	if (last_chunk_sent < USB_BUFFER_SIZE) {
+		process_and_transmit_chunk(active_buffer, last_chunk_sent, USB_BUFFER_SIZE - last_chunk_sent);
+	}
+
     active_buffer = 1 - active_buffer;  // Toggle between 0 and 1
     usb_buffer_cnt = 0;
-
+    last_chunk_sent = 0;  // Reset the chunk tracker
     // Update buffer ready flag
-    buffer_ready_flag = active_buffer ? BUFFER_STATE_READY_0 : BUFFER_STATE_READY_1;
+    //buffer_ready_flag = active_buffer ? BUFFER_STATE_READY_0 : BUFFER_STATE_READY_1;
 }
 
 /**
@@ -65,7 +71,7 @@ void DataAcq_ProcessSamples(TIM_HandleTypeDef* htim)
     }
 
     // Toggle LED to indicate sampling
-    //HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+    HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 
 
     // Get motor data
@@ -89,6 +95,9 @@ void DataAcq_ProcessSamples(TIM_HandleTypeDef* htim)
 
     // Increment buffer counter
     usb_buffer_cnt++;
+
+    // Check if it's time to send a data chunk
+    check_and_send_chunks();
 
     // Check if buffer is full
     if (usb_buffer_cnt >= USB_BUFFER_SIZE) {

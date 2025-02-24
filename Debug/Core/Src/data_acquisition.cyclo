@@ -1,7 +1,7 @@
-../Core/Src/data_acquisition.c:27:19:DataAcq_Init	1
-../Core/Src/data_acquisition.c:41:17:DataAcq_ScaleFloatValue	1
-../Core/Src/data_acquisition.c:49:13:DataAcq_SwitchBuffers	1
-../Core/Src/data_acquisition.c:61:6:DataAcq_ProcessSamples	3
-../Core/Src/data_acquisition.c:102:9:DataAcq_IsBufferReady	1
-../Core/Src/data_acquisition.c:107:10:Get_MilliSecond	1
-../Core/Src/data_acquisition.c:115:11:DataAcq_GetReadyBuffer	2
+../Core/Src/data_acquisition.c:28:19:DataAcq_Init	1
+../Core/Src/data_acquisition.c:42:17:DataAcq_ScaleFloatValue	1
+../Core/Src/data_acquisition.c:50:13:DataAcq_SwitchBuffers	2
+../Core/Src/data_acquisition.c:67:6:DataAcq_ProcessSamples	3
+../Core/Src/data_acquisition.c:111:9:DataAcq_IsBufferReady	1
+../Core/Src/data_acquisition.c:116:10:Get_MilliSecond	1
+../Core/Src/data_acquisition.c:124:11:DataAcq_GetReadyBuffer	2
