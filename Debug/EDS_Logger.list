@@ -7381,12 +7381,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  8003792:	2180      	movs	r1, #128	@ 0x80
  8003794:	4804      	ldr	r0, [pc, #16]	@ (80037a8 <HAL_TIM_PeriodElapsedCallback+0x40>)
  8003796:	f002 f86a 	bl	800586e <HAL_GPIO_TogglePin>
-	}
-
-
-
-
 }
+
+
+/*ADC Measurement*/
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+	// Called when DMA fills the ENTIRE buffer
  800379a:	bf00      	nop
  800379c:	3708      	adds	r7, #8
  800379e:	46bd      	mov	sp, r7
@@ -7396,21 +7396,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  80037a8:	40020400 	.word	0x40020400
 
 080037ac <HAL_ADC_ConvCpltCallback>:
+	//HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
+	HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
+}
 
-
-/*ADC Measurement*/
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
  80037ac:	b580      	push	{r7, lr}
  80037ae:	b082      	sub	sp, #8
  80037b0:	af00      	add	r7, sp, #0
  80037b2:	6078      	str	r0, [r7, #4]
-	// Called when DMA fills the ENTIRE buffer
-	//HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
-	HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
+
+
+
  80037b4:	f44f 4180 	mov.w	r1, #16384	@ 0x4000
  80037b8:	4803      	ldr	r0, [pc, #12]	@ (80037c8 <HAL_ADC_ConvCpltCallback+0x1c>)
  80037ba:	f002 f858 	bl	800586e <HAL_GPIO_TogglePin>
-}
+
  80037be:	bf00      	nop
  80037c0:	3708      	adds	r7, #8
  80037c2:	46bd      	mov	sp, r7
@@ -7419,20 +7419,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
  80037c8:	40020400 	.word	0x40020400
 
 080037cc <HAL_TIM_IC_CaptureCallback>:
-
-
-
-
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+	MotorSpeed_TimerCallback(htim);
+}
+
+
+
  80037cc:	b580      	push	{r7, lr}
  80037ce:	b082      	sub	sp, #8
  80037d0:	af00      	add	r7, sp, #0
  80037d2:	6078      	str	r0, [r7, #4]
-	MotorSpeed_TimerCallback(htim);
+
  80037d4:	6878      	ldr	r0, [r7, #4]
  80037d6:	f7ff fb09 	bl	8002dec <MotorSpeed_TimerCallback>
-}
+/* USER CODE END 1 */
  80037da:	bf00      	nop
  80037dc:	3708      	adds	r7, #8
  80037de:	46bd      	mov	sp, r7

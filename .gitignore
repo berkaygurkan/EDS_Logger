@@ -54,3 +54,4 @@ MATLAB_*
 *.session
 *.pref
 
+Debug/EDS_Logger.list
