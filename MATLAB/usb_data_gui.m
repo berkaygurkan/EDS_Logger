@@ -47,7 +47,7 @@ function usb_data_gui()
         try
             handles.s = serialport(port, 115200);
             configureTerminator(handles.s, 'LF');
-            fprintf(handles.s, 'S'); % Send 'S' command to STM32
+            fprintf(handles.s, 'L'); % Send 'S' command to STM32
         catch e
             set(handles.statusText, 'String', ['Error opening port: ', e.message]);
             return;

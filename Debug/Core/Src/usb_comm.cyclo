@@ -1,4 +1,4 @@
-../Core/Src/usb_comm.c:26:16:transmit_usb_packet	2
-../Core/Src/usb_comm.c:44:13:process_and_transmit_buffer	2
-../Core/Src/usb_comm.c:62:6:usb_transmit_task	3
-../Core/Src/usb_comm.c:72:9:CDC_Receive_FS_App	6
+../Core/Src/usb_comm.c:32:16:transmit_usb_packet	2
+../Core/Src/usb_comm.c:50:13:process_and_transmit_buffer	2
+../Core/Src/usb_comm.c:68:6:usb_transmit_task	7
+../Core/Src/usb_comm.c:95:9:CDC_Receive_FS_App	8

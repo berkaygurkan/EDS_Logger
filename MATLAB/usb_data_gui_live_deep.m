@@ -6,7 +6,7 @@ fig = create_gui();
 % --- GUI Components ---
 handles = guihandles(fig);
 handles.isRunning = false;
-handles.isPaused = false; % Add for pause/resume functionality
+handles.isPaused = false; 
 handles.s = [];
 handles.dataBuffer = zeros(0, 6);  % [PacketCounter, Time_ms, Panasonic, LoadCell, SetRPM, CurrentSpeed]
 handles.byteBuffer = uint8([]);
@@ -15,57 +15,42 @@ handles.packetSize = 28;
 handles.fig = fig;
 
 % --- Live Visualization Setup ---
-handles.dataPlot = axes('Parent', fig, 'Position', [0.12 0.20 0.82 0.70]); 
+handles.dataPlot = axes('Parent', fig, 'Position', [0.12 0.15 0.82 0.75]);
 title(handles.dataPlot, 'Real-Time Sensor Data');
-xlabel(handles.dataPlot, 'Time (ms)');
+xlabel(handles.dataPlot, 'Time (s)'); % Updated to seconds
 ylabel(handles.dataPlot, 'Sensor Values');
 grid(handles.dataPlot, 'on');
 hold(handles.dataPlot, 'on');
 
-% Create data lines with improved styling
-colors = [0 0.4470 0.7410;   % Blue
-    0.8500 0.3250 0.0980; % Orange
-    0.9290 0.6940 0.1250; % Yellow
-    0.4940 0.1840 0.5560]; % Purple
-
+% Data lines setup
+colors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250; 0.4940 0.1840 0.5560];
 lineStyles = {'-', '-', '-', '-'};
 lineWidths = [1.5, 1.5, 1.5, 1.5];
 labels = {'Panasonic (V)', 'Load Cell (N)', 'Set RPM (x1000)', 'Current Speed (x1000)'};
 
 for i = 1:4
     handles.dataLines(i) = plot(handles.dataPlot, NaN, NaN,...
-        'Color', colors(i,:),...
-        'LineStyle', lineStyles{i},...
-        'LineWidth', lineWidths(i),...
-        'DisplayName', labels{i});
+        'Color', colors(i,:), 'LineStyle', lineStyles{i},...
+        'LineWidth', lineWidths(i), 'DisplayName', labels{i});
 end
 
-% Configure legend
+% Legend and axis setup
 handles.legend = legend(handles.dataPlot, 'Location', 'northeastoutside');
-handles.legend.FontName = 'Consolas';
-handles.legend.FontSize = 9;
-handles.legend.Box = 'off';
+set(handles.dataPlot, 'FontName', 'Consolas', 'FontSize', 10);
 
-% Visualization parameters
-handles.plotWindowSize = 1000;  % Show last 1000 ms
-handles.updateInterval = 0.05;  % Update plot every 50ms
+% Visualization parameters (updated for seconds)
+handles.plotWindowSize = 10;  % Show last 10 seconds (was 1000 ms)
+handles.updateInterval = 0.05;  
 handles.lastUpdateTime = 0;
 handles.initialTime = NaN;
 
-% Configure axis aesthetics
-set(handles.dataPlot, 'FontName', 'Consolas', 'FontSize', 10);
-set(handles.dataPlot, 'XColor', [0.3 0.3 0.3], 'YColor', [0.3 0.3 0.3]);
-set(handles.dataPlot, 'GridColor', [0.8 0.8 0.8]);
+% Add listener for dynamic y-axis during pause
+handles.xlimListener = addlistener(handles.dataPlot, 'XLim', 'PostSet', ...
+    @(src,evt) xlimChangedCallback(fig)); % New listener
 
-% Enable zoom and pan for scrolling back
-zoom(handles.fig, 'on');
-pan(handles.fig, 'on');
-
-% Force initial rendering
-drawnow;
 guidata(fig, handles);
 
-% --- Helper Functions ---
+% --- GUI Control Panel ---
     function fig = create_gui()
         fig = figure('Name', 'Real-Time Data Acquisition',...
             'Position', [50 50 1200 700],...
@@ -141,6 +126,7 @@ guidata(fig, handles);
             'BackgroundColor', [0.95 0.95 0.95]);
     end
 
+% --- Callback Functions ---
     function startCallback(~, ~)
         handles = guidata(fig);
         if handles.isRunning
@@ -236,71 +222,7 @@ guidata(fig, handles);
         end
     end
 
-    function updatePlots(handles)
-        if handles.isPaused
-            return;
-        end
-
-        currentTime = toc;
-        if currentTime - handles.lastUpdateTime < handles.updateInterval
-            return;
-        end
-        handles.lastUpdateTime = currentTime;
-
-        if size(handles.dataBuffer, 1) > 10
-            plotData = handles.dataBuffer;
-
-            if isnan(handles.initialTime)
-                handles.initialTime = plotData(1, 2) ;
-            end
-            time_data = plotData(:, 2) - handles.initialTime;
-
-            % Apply scaling factors
-            plotData(:,3) = plotData(:,3) / 4095.0;
-            plotData(:,4) = plotData(:,4) / 4095.0;
-            plotData(:,5) = plotData(:,5) / (1000*7);
-            plotData(:,6) = plotData(:,6) / 1000;
-
-            % Determine visible data
-            current_time = time_data(end);
-            visibleIdx = time_data >= (current_time - handles.plotWindowSize);
-            time_visible = time_data(visibleIdx);
-            data_visible = plotData(visibleIdx, :);
-
-            % Update plot lines with visible data
-            set(handles.dataLines(1), 'XData', time_visible, 'YData', data_visible(:,3));
-            set(handles.dataLines(2), 'XData', time_visible, 'YData', data_visible(:,4));
-            set(handles.dataLines(3), 'XData', time_visible, 'YData', data_visible(:,5));
-            set(handles.dataLines(4), 'XData', time_visible, 'YData', data_visible(:,6));
-
-            % Set x-axis limits
-            xlim(handles.dataPlot, [current_time - handles.plotWindowSize, current_time]);
-
-            % Calculate y-range based on visible data
-            if ~isempty(data_visible)
-                yMin = min(min(data_visible(:,3:6)));
-                yMax = max(max(data_visible(:,3:6)));
-                if isnan(yMin) || isnan(yMax) || isinf(yMin) || isinf(yMax)
-                    yRange = [0 1];
-                else
-                    yRange = [yMin, yMax];
-                end
-                margin = 0.1 * (yRange(2) - yRange(1));
-                if margin == 0
-                    margin = 0.1;
-                end
-                ylim(handles.dataPlot, yRange + [-margin margin]);
-            end
-
-            % Update packet counter
-            set(handles.packetCounter, 'String',...
-                sprintf('Packets Received: %d', plotData(end,1)));
-
-            drawnow limitrate;
-        end
-        guidata(fig, handles);
-    end
-
+% --- Data Acquisition Loop ---
     function data_acquisition_loop()
         handles = guidata(fig);
         packet_count = 0;
@@ -340,7 +262,6 @@ guidata(fig, handles);
                             packet_data = [packet_info(:); values(:)];
 
                             handles.dataBuffer = [handles.dataBuffer; packet_data'];
-                            %packet_count = packet_count + 1;
                             packet_count = handles.dataBuffer(1);
 
                             if packet_count <= 3
@@ -371,7 +292,7 @@ guidata(fig, handles);
 
                 updatePlots(handles);
                 guidata(fig, handles);
-                pause(0.005);
+                pause(0.1);
                 handles = guidata(fig);
 
                 if ~handles.isRunning
@@ -405,6 +326,79 @@ guidata(fig, handles);
                 num2str(packet_count), ' packets processed.']);
         end
         guidata(fig, handles);
+    end
+
+% --- Helper Functions ---
+    function updatePlots(handles)
+        if handles.isPaused, return; end
+        
+        currentTime = toc;
+        if currentTime - handles.lastUpdateTime < handles.updateInterval, return; end
+        handles.lastUpdateTime = currentTime;
+        
+        if size(handles.dataBuffer, 1) > 10
+            plotData = handles.dataBuffer;
+            
+            % Convert time to seconds relative to initialTime
+            if isnan(handles.initialTime)
+                handles.initialTime = plotData(1, 2); 
+            end
+            time_data = (plotData(:,2) - handles.initialTime) / 1000; % Convert to seconds
+            
+            % Apply sensor scaling (adjust factors if needed)
+            plotData(:,3) = plotData(:,3) / 4095.0;      % Panasonic (0-5V)
+            plotData(:,4) = plotData(:,4) / 4095.0;      % Load Cell (0-100N)
+            plotData(:,5) = plotData(:,5) / (1000*7);    % RPM scaling (example)
+            plotData(:,6) = plotData(:,6) / 1000;        % Speed scaling (example)
+            
+            % Update plot data
+            set(handles.dataLines(1), 'XData', time_data, 'YData', plotData(:,3));
+            set(handles.dataLines(2), 'XData', time_data, 'YData', plotData(:,4));
+            set(handles.dataLines(3), 'XData', time_data, 'YData', plotData(:,5));
+            set(handles.dataLines(4), 'XData', time_data, 'YData', plotData(:,6));
+            
+            % Auto-adjust x-axis to show latest data with window
+            current_time = time_data(end);
+            xlim(handles.dataPlot, [max(0, current_time - handles.plotWindowSize), current_time]);
+            
+            % Auto-adjust y-axis to visible data
+            x_limits = xlim(handles.dataPlot);
+            visible_idx = time_data >= x_limits(1) & time_data <= x_limits(2);
+            y_data = [plotData(visible_idx,3); plotData(visible_idx,4); 
+                     plotData(visible_idx,5); plotData(visible_idx,6)];
+            ylim(handles.dataPlot, [min(y_data), max(y_data)] * 1.1); % 10% margin
+            
+            % Update packet counter
+            set(handles.packetCounter, 'String', sprintf('Packets Received: %d', plotData(end,1)));
+            
+            drawnow limitrate;
+        end
+        guidata(fig, handles);
+    end
+
+    function xlimChangedCallback(fig)
+        handles = guidata(fig);
+        if handles.isPaused
+            % Get current time data in seconds
+            time_data = (handles.dataBuffer(:,2) - handles.initialTime) / 1000;
+            current_xlim = xlim(handles.dataPlot);
+            
+            % Find visible data indices
+            idx = time_data >= current_xlim(1) & time_data <= current_xlim(2);
+            if any(idx)
+                % Extract and scale visible data
+                panasonic = handles.dataBuffer(idx,3)/4095.0;
+                loadcell = handles.dataBuffer(idx,4)/4095.0;
+                setRPM = handles.dataBuffer(idx,5)/(1000*7);
+                currentSpeed = handles.dataBuffer(idx,6)/1000;
+                
+                y_min = min([panasonic; loadcell; setRPM; currentSpeed]);
+                y_max = max([panasonic; loadcell; setRPM; currentSpeed]);
+                margin = 0.1*(y_max - y_min);
+                if margin == 0, margin = 0.1; end
+                ylim(handles.dataPlot, [y_min-margin, y_max+margin]);
+            end
+        end
     end
 
     function headerIdx = findHeader(buffer, header)
