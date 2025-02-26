@@ -61,9 +61,9 @@ The connections below are arranged to read analog sensors. Please remember that 
 |      GND*       |          GND*          |
 
 
-Here, I created a pin diagram based on the worst-case scenario, assuming each load cell has a single output. Please confirm the number of load cells and the analog inputs the system needs to read with Mr. Ferhat."
+Here, I created a pin diagram based on the worst-case scenario, assuming each load cell has a single output. 
 
-- Additionally, I haven't specified the power connections of the sensors here, but their GND need to be connected to the STM. "
+- Additionally, I haven't specified the power connections of the sensors here, but their GND need to be connected to the STM.
 ### STM to MATLAB
 
 1. **Debugging & Programming:** The onboard STM Link with a USB input is used.
