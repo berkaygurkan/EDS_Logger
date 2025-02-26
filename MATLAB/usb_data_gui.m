@@ -1,18 +1,18 @@
 function usb_data_gui()
-    % Create and run the USB Data Acquisition GUI
-    % --- GUI Creation ---
-    fig = create_gui();
-    % --- GUI Components ---
-    handles = guihandles(fig); % Get handles to GUI objects
-    handles.isRunning = false;
-    handles.s = [];
-    handles.dataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
-    myDataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
-    handles.byteBuffer = uint8([]);
-    handles.header = uint8([0xAA, 0xBB, 0xCC, 0xDD]);
-    handles.packetSize = 28; % Header + Packet Counter + 5 Data Values (uint32_t)
-    guidata(fig, handles); % Store handles in figure's user data
-    % --- Helper Functions (nested within usb_data_gui_final for access to handles) ---
+% Create and run the USB Data Acquisition GUI
+% --- GUI Creation ---
+fig = create_gui();
+% --- GUI Components ---
+handles = guihandles(fig); % Get handles to GUI objects
+handles.isRunning = false;
+handles.s = [];
+handles.dataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
+myDataBuffer = zeros(0, 7); % Initialize dataBuffer as 0x6 matrix to enforce column number
+handles.byteBuffer = uint8([]);
+handles.header = uint8([0xAA, 0xBB, 0xCC, 0xDD]);
+handles.packetSize = 28; % Header + Packet Counter + 5 Data Values (uint32_t)
+guidata(fig, handles); % Store handles in figure's user data
+% --- Helper Functions (nested within usb_data_gui_final for access to handles) ---
     function fig = create_gui()
         % Create the main figure and UI controls
         fig = figure('Name', 'USB Data Acquisition Final', ...
@@ -47,7 +47,7 @@ function usb_data_gui()
         try
             handles.s = serialport(port, 115200);
             configureTerminator(handles.s, 'LF');
-            fprintf(handles.s, 'L'); % Send 'S' command to STM32
+            fprintf(handles.s, 'S'); % Send 'S' command to STM32
         catch e
             set(handles.statusText, 'String', ['Error opening port: ', e.message]);
             return;
@@ -154,8 +154,19 @@ function usb_data_gui()
         if ~handles.isRunning && ~isempty(handles.s) && isvalid(handles.s) % Check if serial port is valid before clearing/closing
             clear handles.s;
         end
-        save('sensor_data_final.mat','handles','packet_count', 'missed_header_count','packet_data',"myDataBuffer");
+        % Save to "Data" directory
+        directoryName = 'Data';
+        if ~exist(directoryName, 'dir')
+            mkdir(directoryName);
+        end
+
+        timestamp = datestr(now, 'yyyy-mm-dd_HH-MM-SS');
+        filename = sprintf('%s/sensor_data_final_%s.mat', directoryName, timestamp);
+
+        save(filename,'handles','packet_count', 'missed_header_count','packet_data',"myDataBuffer"); % Save inside "Data"
+
         disp(['Complete. Processed Packets: ', num2str(packet_count), ', Missed Headers: ', num2str(missed_header_count)]);
+
         set(handles.statusText, 'String', 'Data saved to sensor_data_final.mat.');
         guidata(gcbo, handles); % Update handles one last time before exit
     end % end of data_acquisition_loop
