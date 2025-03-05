@@ -36,7 +36,7 @@ void HX711_SetGain(HX711* hx, uint8_t gain) {
     }
 }
 
-/*int32_t HX711_Read(HX711* hx) {
+int32_t HX711_Read(HX711* hx) {
     HX711_WaitReady(hx, 0);
 
     uint8_t data[3] = {0};
@@ -75,7 +75,7 @@ void HX711_SetGain(HX711* hx, uint8_t gain) {
 
     return value;
 }
-*/
+
 
 void HX711_WaitReady(HX711* hx, uint32_t delay_ms) {
     while (!HX711_IsReady(hx)) {
@@ -150,36 +150,6 @@ void HX711_PowerUp(HX711* hx) {
 
 
 
-int32_t HX711_Read(HX711* hx) {
-
-
-	  int32_t data = 0;
-	  HX711_WaitReady(hx, 0);
-
-	  //uint32_t startTime = HAL_GetTick();
-	  /*while(HAL_GPIO_ReadPin(LOADCELL_DOUT_PORT, LOADCELL_DOUT_PIN) == GPIO_PIN_SET)
-	  {
-	    if(HAL_GetTick() - startTime > 200)
-	      return 0;
-	  }*/
-	  for(int8_t len=0; len<24 ; len++)
-	  {
-	    HAL_GPIO_WritePin(LOADCELL_SCK_PORT, LOADCELL_SCK_PIN, GPIO_PIN_SET);
-	    delay_microseconds(1);
-	    data = data << 1;
-	    HAL_GPIO_WritePin(LOADCELL_SCK_PORT, LOADCELL_SCK_PIN, GPIO_PIN_RESET);
-	    delay_microseconds(1);
-	    if(HAL_GPIO_ReadPin(LOADCELL_DOUT_PORT, LOADCELL_DOUT_PIN) == GPIO_PIN_SET)
-	      data ++;
-	  }
-	  data = data ^ 0x800000;
-	  HAL_GPIO_WritePin(LOADCELL_SCK_PORT, LOADCELL_SCK_PIN, GPIO_PIN_SET);
-	  delay_microseconds(1);
-	  HAL_GPIO_WritePin(LOADCELL_SCK_PORT, LOADCELL_SCK_PIN, GPIO_PIN_RESET);
-	  delay_microseconds(1);
-	  return data;
-
-}
 
 
 

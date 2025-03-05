@@ -163,39 +163,18 @@ int main(void)
 		Error_Handler();
 	}
 
-	/*HX711_SetScale(&scale,1);
-	HX711_Tare(&scale,1);
+	 HX711_Init(&scale, LOADCELL_DOUT_PORT, LOADCELL_DOUT_PIN,
+			 LOADCELL_SCK_PORT, LOADCELL_SCK_PIN, 128);
+	HX711_SetScale(&scale,1);
+	HX711_Tare(&scale,30);
 
 
 	first_reading = HX711_GetUnits(&scale,20);
 	test = (float)(first_reading)/(load_known);
-	HX711_SetScale(&scale,test);*/
+	HX711_SetScale(&scale,test);
 
 
 
-	for (uint8_t i=0; i<5;i++)
-	{
-
-		test_int32[i] = HX711_Read(&scale);
-		avg =test_int32[i]+avg;
-		HAL_Delay(2000);
-	}
-
-	tare = avg/5;
-	avg = 0;
-	HAL_Delay(3000);
-
-	for (uint8_t i=0; i<5;i++)
-	{
-
-		test_int32[i] = HX711_Read(&scale)-tare;
-		avg =test_int32[i]+avg;
-		HAL_Delay(2000);
-	}
-
-	known = avg/ 5;
-
-	scaler = 194.0f/known;
 
 
 
@@ -206,7 +185,7 @@ int main(void)
 	while (1)
 	{
     /* USER CODE END WHILE */
-
+	first_reading = HX711_GetUnits(&scale,1);
     /* USER CODE BEGIN 3 */
 		//Application();
 	}
