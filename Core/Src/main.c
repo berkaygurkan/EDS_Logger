@@ -28,6 +28,7 @@
 #include "usb_comm.h"
 #include "motor_speed.h"
 #include "data_acquisition.h"
+#include "HX711.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,6 +83,16 @@ DMA_HandleTypeDef hdma_usart2_tx;
 /* USER CODE BEGIN PV */
 volatile uint32_t adc_buffer[ADC_BUFFER_SIZE]; // Buffer
 extern uint32_t packet_counter; // Add packet counter
+
+
+HX711 scale;
+float first_reading = 0;
+float test = 0;
+float load_reading =0.0f;
+float  load_known = 194.0f;
+
+
+int32_t test_int32[5] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,7 +113,10 @@ static void Application(void);												// while loop applications
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int32_t tare = 0;
+int32_t avg = 0;
+int32_t known = 0 ;
+float scaler = 0 ;
 /* USER CODE END 0 */
 
 /**
@@ -143,13 +157,47 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_TIM4_Init();
   MX_USART2_UART_Init();
-
-
   /* USER CODE BEGIN 2 */
-  /* Initialize Application Modules */
-  if (ApplicationInit_Sequence() != HAL_OK) {
-      Error_Handler();
-  }
+	/* Initialize Application Modules */
+	if (ApplicationInit_Sequence() != HAL_OK) {
+		Error_Handler();
+	}
+
+	/*HX711_SetScale(&scale,1);
+	HX711_Tare(&scale,1);
+
+
+	first_reading = HX711_GetUnits(&scale,20);
+	test = (float)(first_reading)/(load_known);
+	HX711_SetScale(&scale,test);*/
+
+
+
+	for (uint8_t i=0; i<5;i++)
+	{
+
+		test_int32[i] = HX711_Read(&scale);
+		avg =test_int32[i]+avg;
+		HAL_Delay(2000);
+	}
+
+	tare = avg/5;
+	avg = 0;
+	HAL_Delay(3000);
+
+	for (uint8_t i=0; i<5;i++)
+	{
+
+		test_int32[i] = HX711_Read(&scale)-tare;
+		avg =test_int32[i]+avg;
+		HAL_Delay(2000);
+	}
+
+	known = avg/ 5;
+
+	scaler = 194.0f/known;
+
+
 
   /* USER CODE END 2 */
 
@@ -158,8 +206,9 @@ int main(void)
 	while (1)
 	{
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
-	Application();
+		//Application();
 	}
   /* USER CODE END 3 */
 }
@@ -623,11 +672,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
@@ -638,12 +692,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
+  /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin PB9 */
+  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PF13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PD15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
   GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
@@ -667,30 +740,35 @@ static void MX_GPIO_Init(void)
 
 static HAL_StatusTypeDef ApplicationInit_Sequence(void)
 {
-    /* Start ADC with DMA */
-    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE) != HAL_OK) {
-        return HAL_ERROR;
-       }
+	/* Start ADC with DMA */
+	if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE) != HAL_OK) {
+		return HAL_ERROR;
+	}
 
-    /* Initialize motor speed monitoring */
-    if (MotorSpeed_Init(&htim4) != HAL_OK) {
-        return HAL_ERROR;
-    }
+	/* Initialize motor speed monitoring */
+	if (MotorSpeed_Init(&htim4) != HAL_OK) {
+		return HAL_ERROR;
+	}
 
-    /* Start timer input capture for all channels */
-    if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1) != HAL_OK) return HAL_ERROR;
-    if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2) != HAL_OK) return HAL_ERROR;
-    if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_3) != HAL_OK) return HAL_ERROR;
 
-    /* Initialize data acquisition system */
-    if (DataAcq_Init() != HAL_OK) {
-    	return HAL_ERROR;
-    }
 
-    /* Initialize BLDC interface */
-    bldc_interface_uart_init(send_packet);
+	/* Start timer input capture for all channels */
+	if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1) != HAL_OK) return HAL_ERROR;
+	if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2) != HAL_OK) return HAL_ERROR;
+	if (HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_3) != HAL_OK) return HAL_ERROR;
 
-    return HAL_OK;
+	/* Initialize data acquisition system */
+	if (DataAcq_Init() != HAL_OK) {
+		return HAL_ERROR;
+	}
+
+	/* Initialize BLDC interface */
+	bldc_interface_uart_init(send_packet);
+
+	/* Initialize Timer 2 */
+	HAL_TIM_Base_Start(&htim2);
+
+	return HAL_OK;
 }
 
 

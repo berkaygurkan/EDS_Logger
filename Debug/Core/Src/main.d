@@ -40,7 +40,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../USB_DEVICE/Target/usbd_conf.h ../Core/Inc/bldc_interface_uart.h \
  ../Core/Inc/packet.h ../Core/Inc/bldc_interface.h \
  ../Core/Inc/datatypes.h ../Core/Inc/usb_comm.h ../Core/Inc/motor_speed.h \
- ../Core/Inc/data_acquisition.h
+ ../Core/Inc/data_acquisition.h ../Core/Inc/HX711.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -88,3 +88,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/usb_comm.h:
 ../Core/Inc/motor_speed.h:
 ../Core/Inc/data_acquisition.h:
+../Core/Inc/HX711.h:

@@ -1,5 +1,4 @@
-Core/Src/stm32f7xx_it.o: ../Core/Src/stm32f7xx_it.c \
- ../Core/Inc/data_acquisition.h \
+Core/Src/stm32f7xx_it.o: ../Core/Src/stm32f7xx_it.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h \
  ../Core/Inc/stm32f7xx_hal_conf.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h \
@@ -36,11 +35,11 @@ Core/Src/stm32f7xx_it.o: ../Core/Src/stm32f7xx_it.c \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_ll_usb.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd_ex.h \
- ../Core/Inc/main.h ../Core/Inc/stm32f7xx_it.h \
- ../Core/Inc/bldc_interface_uart.h ../Core/Inc/packet.h \
- ../Core/Inc/bldc_interface.h ../Core/Inc/datatypes.h \
- ../Core/Inc/controller.h ../Core/Inc/motor_speed.h
-../Core/Inc/data_acquisition.h:
+ ../Core/Inc/stm32f7xx_it.h ../Core/Inc/bldc_interface_uart.h \
+ ../Core/Inc/packet.h ../Core/Inc/bldc_interface.h \
+ ../Core/Inc/datatypes.h ../Core/Inc/controller.h \
+ ../Core/Inc/motor_speed.h ../Core/Inc/data_acquisition.h
+../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h:
@@ -77,7 +76,6 @@ Core/Src/stm32f7xx_it.o: ../Core/Src/stm32f7xx_it.c \
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_ll_usb.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd_ex.h:
-../Core/Inc/main.h:
 ../Core/Inc/stm32f7xx_it.h:
 ../Core/Inc/bldc_interface_uart.h:
 ../Core/Inc/packet.h:
@@ -85,3 +83,4 @@ Core/Src/stm32f7xx_it.o: ../Core/Src/stm32f7xx_it.c \
 ../Core/Inc/datatypes.h:
 ../Core/Inc/controller.h:
 ../Core/Inc/motor_speed.h:
+../Core/Inc/data_acquisition.h:

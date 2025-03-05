@@ -1,3 +1,4 @@
+"./Core/Src/HX711.o"
 "./Core/Src/bldc_interface.o"
 "./Core/Src/bldc_interface_uart.o"
 "./Core/Src/buffer.o"

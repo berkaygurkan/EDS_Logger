@@ -18,16 +18,15 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include <data_acquisition.h>
 #include "main.h"
 #include "stm32f7xx_it.h"
-#include "math.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bldc_interface_uart.h"
 #include "bldc_interface.h"
 #include "controller.h"
 #include "motor_speed.h"
+#include "data_acquisition.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
